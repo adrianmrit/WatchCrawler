@@ -5,11 +5,24 @@ import json
 
 
 def get_field(response, xpath):
-    """If no xpath return empty"""
+    """Get a field using xpath
+
+    Arguments:
+        response {scrapy.http.Response} -- response object
+        xpath {string} -- x
+
+    Returns:
+        [string] -- xpath match
+    """
     if xpath:
-        return response.xpath(xpath).get()
-    else:
-        return None
+        field = response.xpath(xpath).get()
+        if field:
+            return field.strip()
+        else:
+            with open('xpath_logs.txt', 'a') as logfile:
+                logfile.write(xpath + '---' + response.url + '\n\n')
+
+    return None
 
 
 def save_watch(watch):
@@ -17,41 +30,38 @@ def save_watch(watch):
                 json.dump(dict(watch), fp, indent=4)
 
 
-# TODO: clean spaces from data
-# TODO: remember to use refer
-def crawler_creator(params):
-    """Generate a crawler with params"""
+def crawler_creator(params, watch_parser):
+    """Generate a Crawler for different pages.
+
+    Arguments:
+        params {dict} -- see base.json for example
+        watch_parser {function} -- call back function for links that match allowed watches url
+
+    Returns:
+        Crawler -- Crawler object used by scrapy
+    """
 
     class Crawler(CrawlSpider):
-        name = params['brand']
-        allowed_domains = params['allowed_domains']
-        start_urls = params['start_urls']
-
         custom_settings = {
             'DOWNLOAD_DELAY': 3,
         }
 
+        def __init__(self, *a, **kw):
+            self.params = params
+            self.name = params['brand']
+            self.allowed_domains = params['allowed_domains']
+            self.start_urls = params['start_urls']
 
-        # ! if no suplied empty array to allow in LinkExtractor it will follow all links. To fix this use r"\b\B", wich wont match anything.
-        allowed_collections_urls = r"\b\B"
-        if params['allowed_collections_urls']:
-            allowed_collections_urls = params['allowed_collections_urls']
+            # ! if no suplied empty array to allow in LinkExtractor it will follow all links. To fix this use r"\b\B", wich wont match anything.
+            allowed_collections_urls = r"\b\B"
+            if self.params['allowed_collections_urls']:
+                allowed_collections_urls = self.params['allowed_collections_urls']
 
-        rules = [
-            Rule(LinkExtractor(allow=allowed_collections_urls), follow=True),
-            Rule(LinkExtractor(allow=params['allowed_watches_urls']), callback='parse_watches', follow=False)]
+            self.rules = [
+                Rule(LinkExtractor(allow=allowed_collections_urls), follow=True),
+                Rule(LinkExtractor(allow=self.params['allowed_watches_urls']), callback='parse_watches', follow=False)]
 
+            Crawler.parse_watches = watch_parser
+            super().__init__(*a, **kw)
 
-        def parse_watches(self, response):
-            watch = Watch()
-
-            watch['url'] = response.url
-            watch['brand'] = params['brand']
-
-            for field in params['xpaths'].keys():
-                watch[field] = get_field(response, params['xpaths'][field])
-
-            save_watch(watch)
-
-    print('Created Crawler')
     return Crawler
