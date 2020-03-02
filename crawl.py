@@ -3,6 +3,10 @@ from watches import crawler_creator
 from load import load
 from WatchSpider.items import Watch
 import json
+import requests
+
+config = json.load(open('config.json'))
+
 
 def get_field(response, xpath):
     """Get field using xpath"""
@@ -15,12 +19,11 @@ def get_field(response, xpath):
 
 
 def save_watch(watch):
-    with open('results/' + watch['reference'] + '.json', 'w') as fp:
-                json.dump(dict(watch), fp, indent=4)
+    response = requests.post(config['server'], json=watch, headers={'Authorization':config['auth_token']})
 
 
 def parse_watches(self, response):
-            watch = Watch()
+            watch = {}
 
             watch['url'] = response.url
             watch['brand'] = self.params['brand']
