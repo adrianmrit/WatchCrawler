@@ -4,6 +4,9 @@ from load import load
 from WatchSpider.items import Watch
 import json
 import requests
+from PIL import Image
+from io import BytesIO
+import urllib.parse
 
 config = json.load(open('config.json'))
 
@@ -17,9 +20,33 @@ def get_field(response, xpath):
 
     return None
 
+def parse_image_url(url):
+    parsed = urllib.parse.urlparse(url)
+    url = ''
+    if not parsed.scheme:
+        url+="http://"
+    else:
+        url+=parsed.scheme
+    url += parsed.netloc
+    url += parsed.path
+
+    if parsed.query:
+        url += "?"
+        url += parsed.query
+
+    return url
 
 def save_watch(watch):
-    response = requests.post(config['server'], json=watch, headers={'Authorization':config['auth_token']})
+    url = parse_image_url(watch['image'])
+    image = requests.get(url)
+    del watch['image']
+    img = Image.open(BytesIO(image.content))
+    byte_io = BytesIO()
+    img.save(byte_io, 'JPEG')
+    files = {'image': (watch['reference']+watch['name']+".jpg", byte_io.getvalue(), "image/jpeg")}
+
+
+    response = requests.post(config['server'], data={'json': json.dumps(watch)}, files=files, headers={'Authorization':config['auth_token']})
 
 
 def parse_watches(self, response):

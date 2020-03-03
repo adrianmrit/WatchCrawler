@@ -1,5 +1,8 @@
 import requests
 import json
+from PIL import Image
+from io import BytesIO
+import json
 
 config = json.load(open('config.json'))
 
@@ -37,6 +40,11 @@ watch = {
     "strap_color": None,
     "features": None
 }
-
-response = requests.post(config['server'], json=watch, headers={'Authorization':config['auth_token']})
+image = requests.get("https://cdn.shopify.com/s/files/1/1786/0047/products/1M-SP74B7G-straight_400x.jpg?v=1580779762")
+img = Image.open(BytesIO(image.content))
+# img.save('image.jpg', 'JPEG')
+byte_io = BytesIO()
+img.save(byte_io, 'JPEG')
+files = {'image': (watch['reference']+watch['name']+".jpg", byte_io.getvalue(), "image/jpeg")}
+response = requests.post(config['server'], data={'json': json.dumps(watch)}, files=files, headers={'Authorization':config['auth_token']})
 print(response.status_code)
