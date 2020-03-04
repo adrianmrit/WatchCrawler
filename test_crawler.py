@@ -5,6 +5,8 @@ from watches import crawler_creator
 from WatchSpider.items import Watch
 import json
 
+
+# TODO: save images locally
 def get_field(response, xpath):
     """Get field and log broken xpaths"""
     if xpath:

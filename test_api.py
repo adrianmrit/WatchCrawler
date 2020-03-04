@@ -41,10 +41,18 @@ watch = {
     "features": None
 }
 image = requests.get("https://cdn.shopify.com/s/files/1/1786/0047/products/1M-SP74B7G-straight_400x.jpg?v=1580779762")
-img = Image.open(BytesIO(image.content))
-# img.save('image.jpg', 'JPEG')
-byte_io = BytesIO()
-img.save(byte_io, 'JPEG')
-files = {'image': (watch['reference']+watch['name']+".jpg", byte_io.getvalue(), "image/jpeg")}
-response = requests.post(config['server'], data={'json': json.dumps(watch)}, files=files, headers={'Authorization':config['auth_token']})
-print(response.status_code)
+
+def test():
+    img = Image.open(BytesIO(image.content))
+
+    byte_io = BytesIO()
+    img.save(byte_io, 'JPEG')  # convert the image to JPEG and save it as bytestring
+
+    files = {'image': (watch['reference']+watch['name']+".jpg", byte_io.getvalue(), "image/jpeg")}
+
+    response = requests.post(config['server'], data={'json': json.dumps(watch)}, files=files, headers={'Authorization':config['auth_token']})
+    print(response.status_code)
+
+
+if __name__ == '__main__':
+    test()

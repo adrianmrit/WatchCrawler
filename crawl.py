@@ -12,21 +12,40 @@ config = json.load(open('config.json'))
 
 
 def get_field(response, xpath):
-    """Get field using xpath"""
+    """Get a field using xpath
+
+    Arguments:
+        response {scrapy.http.Response} -- response object
+        xpath {string} -- xpath to the field
+
+    Returns:
+        [string] -- xpath match
+    """
     if xpath:
         field = response.xpath(xpath).get()
         if field:
-            return field.strip()
+            return field.strip()  # TODO: clean data even further
 
     return None
 
-def parse_image_url(url):
+
+def clean_url(url):
+    """Clean any url, specially useful for those starting with double slash
+
+    Arguments:
+        url {string} -- [Url to be cleaned]
+
+    Returns:
+        [string] -- [cleaned url]
+    """
     parsed = urllib.parse.urlparse(url)
     url = ''
+
     if not parsed.scheme:
         url+="http://"
     else:
         url+=parsed.scheme
+
     url += parsed.netloc
     url += parsed.path
 
@@ -36,35 +55,54 @@ def parse_image_url(url):
 
     return url
 
+
 def save_watch(watch):
-    url = parse_image_url(watch['image'])
+    """Upload the watch data using the api.
+
+    Arguments:
+        watch {dict} -- Watch to be saved.
+    """
+    url = clean_url(watch['image'])
+
     image = requests.get(url)
-    del watch['image']
+    del watch['image']  # avoid uploading image as a field
+
     img = Image.open(BytesIO(image.content))
     byte_io = BytesIO()
     img.save(byte_io, 'JPEG')
-    files = {'image': (watch['reference']+watch['name']+".jpg", byte_io.getvalue(), "image/jpeg")}
+    image_name = watch['reference'] + watch['name'] + ".jpg"
+    files = {'image': (image_name, byte_io.getvalue(), "image/jpeg")}
 
-
+    # TODO: use json instead of data
     response = requests.post(config['server'], data={'json': json.dumps(watch)}, files=files, headers={'Authorization':config['auth_token']})
 
 
 def parse_watches(self, response):
-            watch = {}
+    """Callback function to parse the watches
 
-            watch['url'] = response.url
-            watch['brand'] = self.params['brand']
+    Arguments:
+        response {Scrapy Response} -- Scrapy Response object that will be processed
+    """
+    watch = {}
 
-            for field in self.params['xpaths'].keys():
-                watch[field] = get_field(response, self.params['xpaths'][field])
+    watch['url'] = response.url
+    watch['brand'] = self.params['brand']  # each crawler object has this
 
-            save_watch(watch)
+    # Use the same xpath fields in params['xpaths'] as in the watch dict. This field MUST be the same as in the api
+    for field in self.params['xpaths'].keys():
+        watch[field] = get_field(response, self.params['xpaths'][field])
 
-process = CrawlerProcess()
+    save_watch(watch)
 
-data = load('data')
 
-for brand in data:
-    process.crawl(crawler_creator(brand, parse_watches))
+if __name__ == '__main__':
+    process = CrawlerProcess()
 
-process.start()
+    data = load('data')
+
+
+    # creates a crawler for each brand.
+    for brand in data:
+        process.crawl(crawler_creator(brand, parse_watches))
+
+    process.start()
