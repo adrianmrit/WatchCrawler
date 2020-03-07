@@ -1,13 +1,13 @@
 from scrapy.crawler import CrawlerProcess
 from watches import crawler_creator
 from load import load
-from WatchSpider.items import Watch
 import json
 import requests
 from PIL import Image
 from io import BytesIO
 import urllib.parse
 from scrapy.utils.project import get_project_settings
+from utils.urls import clean_url
 
 
 config = json.load(open('config.json'))
@@ -29,33 +29,6 @@ def get_field(response, xpath):
             return field.strip()  # TODO: clean data even further
 
     return None
-
-
-def clean_url(url):
-    """Clean any url, specially useful for those starting with double slash
-
-    Arguments:
-        url {string} -- [Url to be cleaned]
-
-    Returns:
-        [string] -- [cleaned url]
-    """
-    parsed = urllib.parse.urlparse(url)
-    url = ''
-
-    if not parsed.scheme:
-        url+="http://"
-    else:
-        url+=parsed.scheme
-
-    url += parsed.netloc
-    url += parsed.path
-
-    if parsed.query:
-        url += "?"
-        url += parsed.query
-
-    return url
 
 
 def save_watch(watch):
