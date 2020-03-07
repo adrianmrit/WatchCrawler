@@ -4,6 +4,7 @@ from scrapy.crawler import CrawlerProcess
 from watches import crawler_creator
 import json
 from scrapy.utils.project import get_project_settings
+from utils.urls import clean_url
 
 
 def parse_watch_store(self, response):
@@ -17,6 +18,7 @@ def parse_watch_store(self, response):
     for field in self.params['xpaths'].keys():
         watch[field] = get_field(response, self.params['xpaths'][field])
 
+    watch['image'] = clean_url(watch['image'])
     save_watch(watch)
 
 
@@ -35,6 +37,7 @@ def parse_watch_brand(self, response):
     for field in self.params['xpaths'].keys():
         watch[field] = get_field(response, self.params['xpaths'][field])
 
+    watch['image'] = clean_url(watch['image'])
     save_watch(watch)
 
 

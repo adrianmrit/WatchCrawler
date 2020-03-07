@@ -7,6 +7,8 @@ import requests
 from PIL import Image
 from io import BytesIO
 import urllib.parse
+from scrapy.utils.project import get_project_settings
+
 
 config = json.load(open('config.json'))
 
@@ -78,7 +80,7 @@ def save_watch(watch):
         response = requests.post(config['server'], data={'json': json.dumps(watch)}, files=files, headers={'Authorization':config['auth_token']})
 
 
-def parse_watches(self, response):
+def parse_watch_brand(self, response):
     """Callback function to parse the watches
 
     Arguments:
@@ -96,14 +98,31 @@ def parse_watches(self, response):
     save_watch(watch)
 
 
+def parse_watch_store(self, response):
+    """Save watch from a store page using save(watch)
+
+    Arguments:
+        response {scrapy.http.Response} -- response object
+    """
+    watch = {}
+    print(response.request.headers)
+    for field in self.params['xpaths'].keys():
+        watch[field] = get_field(response, self.params['xpaths'][field])
+
+    save_watch(watch)
+
+
 if __name__ == '__main__':
-    process = CrawlerProcess()
+    process = CrawlerProcess(get_project_settings())  # set global settings
 
     data = load('data')
 
 
-    # creates a crawler for each brand.
-    for brand in data:
-        process.crawl(crawler_creator(brand, parse_watches))
+    # create the correct crawler for each type of site
+    for page_struct in data:
+        if page_struct['type'] == 'store':
+            process.crawl(crawler_creator(page_struct, parse_watch_store))
+        elif page_struct['type'] == 'brand':
+            process.crawl(crawler_creator(page_struct, parse_watch_brand))
 
     process.start()
