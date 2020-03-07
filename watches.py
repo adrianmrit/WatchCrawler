@@ -1,7 +1,7 @@
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
-from WatchSpider.items import Watch
 import json
+from WatchSpider import settings as global_settings
 
 
 def get_field(response, xpath):
@@ -42,13 +42,9 @@ def crawler_creator(params, watch_parser):
     """
 
     class Crawler(CrawlSpider):
-        custom_settings = {
-            'DOWNLOAD_DELAY': 3,
-        }
-
         def __init__(self, *a, **kw):
             self.params = params
-            self.name = params['brand']
+            self.name = params['allowed_domains'][0]
             self.allowed_domains = params['allowed_domains']
             self.start_urls = params['start_urls']
 
@@ -63,5 +59,6 @@ def crawler_creator(params, watch_parser):
 
             Crawler.parse_watches = watch_parser
             super().__init__(*a, **kw)
+
 
     return Crawler

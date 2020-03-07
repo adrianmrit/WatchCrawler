@@ -2,8 +2,40 @@ import argparse
 from load import load_data
 from scrapy.crawler import CrawlerProcess
 from watches import crawler_creator
-from WatchSpider.items import Watch
 import json
+from scrapy.utils.project import get_project_settings
+
+
+def parse_watch_store(self, response):
+    """Save watch from a store page using save(watch)
+
+    Arguments:
+        response {scrapy.http.Response} -- response object
+    """
+    watch = {}
+    print(response.request.headers)
+    for field in self.params['xpaths'].keys():
+        watch[field] = get_field(response, self.params['xpaths'][field])
+
+    save_watch(watch)
+
+
+def parse_watch_brand(self, response):
+    """Save a watch from the brand page using save_watch(watch)
+
+    Arguments:
+        response {scrapy.http.Response} -- response object
+    """
+    watch = {}
+
+    # url and brand are not extracted from the page in this case
+    watch['url'] = response.url
+    watch['brand'] = self.params['brand']
+
+    for field in self.params['xpaths'].keys():
+        watch[field] = get_field(response, self.params['xpaths'][field])
+
+    save_watch(watch)
 
 
 # TODO: save images locally
@@ -27,31 +59,18 @@ def save_watch(watch):
 
 
 
-def parse_watches(self, response):
-    """Save a watch using save_watch(watch)
-
-    Arguments:
-        response {scrapy.http.Response} -- response object
-    """
-    watch = Watch()
-
-    watch['url'] = response.url
-    watch['brand'] = self.params['brand']
-
-    for field in self.params['xpaths'].keys():
-        watch[field] = get_field(response, self.params['xpaths'][field])
-
-        save_watch(watch)
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Scrap data from only one website')
     parser.add_argument('--file', metavar='path', required=True,
                         help='the path to the json file')
     args = parser.parse_args()
 
-    brand = load_data([args.file])[0]
+    page_struct = load_data([args.file])[0]
+    process = CrawlerProcess(get_project_settings())
 
-    process = CrawlerProcess()
-    process.crawl(crawler_creator(brand, parse_watches))
+    if page_struct['type'] == 'brand':
+        process.crawl(crawler_creator(page_struct, parse_watch_brand))
+    elif page_struct['type'] == 'store':
+        process.crawl(crawler_creator(page_struct, parse_watch_store))
+
     process.start()

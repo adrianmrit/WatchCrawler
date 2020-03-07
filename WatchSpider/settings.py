@@ -16,7 +16,7 @@ NEWSPIDER_MODULE = 'WatchSpider.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'WatchSpider (+http://www.yourdomain.com)'
+USER_AGENT = 'WatchSpider (+adrianmrit@gmail.com)'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
