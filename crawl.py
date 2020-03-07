@@ -62,19 +62,20 @@ def save_watch(watch):
     Arguments:
         watch {dict} -- Watch to be saved.
     """
-    url = clean_url(watch['image'])
+    if watch['reference']:  # ?if there is no reference probably it wasn't a watch
+        url = clean_url(watch['image'])
 
-    image = requests.get(url)
-    del watch['image']  # avoid uploading image as a field
+        image = requests.get(url)
+        del watch['image']  # avoid uploading image as a field
 
-    img = Image.open(BytesIO(image.content))
-    byte_io = BytesIO()
-    img.save(byte_io, 'JPEG')
-    image_name = watch['reference'] + watch['name'] + ".jpg"
-    files = {'image': (image_name, byte_io.getvalue(), "image/jpeg")}
+        img = Image.open(BytesIO(image.content))
+        byte_io = BytesIO()
+        img.save(byte_io, 'JPEG')
+        image_name = watch['reference'] + watch['name'] + ".jpg"
+        files = {'image': (image_name, byte_io.getvalue(), "image/jpeg")}
 
-    # TODO: use json instead of data
-    response = requests.post(config['server'], data={'json': json.dumps(watch)}, files=files, headers={'Authorization':config['auth_token']})
+        # TODO: use json instead of data
+        response = requests.post(config['server'], data={'json': json.dumps(watch)}, files=files, headers={'Authorization':config['auth_token']})
 
 
 def parse_watches(self, response):
