@@ -14,11 +14,13 @@ def parse_watch_store(self, response):
         response {scrapy.http.Response} -- response object
     """
     watch = {}
-    print(response.request.headers)
     for field in self.params['xpaths'].keys():
         watch[field] = get_field(response, self.params['xpaths'][field])
 
     watch['image'] = clean_url(watch['image'])
+    watch['store'] = self.params['store']
+    watch['sale_url'] = response.url
+    watch['currency'] = self.params['default_currency']
     save_watch(watch)
 
 
@@ -30,14 +32,16 @@ def parse_watch_brand(self, response):
     """
     watch = {}
 
-    # url and brand are not extracted from the page in this case
-    watch['url'] = response.url
-    watch['brand'] = self.params['brand']
-
     for field in self.params['xpaths'].keys():
         watch[field] = get_field(response, self.params['xpaths'][field])
 
+     # url and brand are not extracted from the page in this case
+    watch['url'] = response.url
+    watch['brand'] = self.params['brand']
     watch['image'] = clean_url(watch['image'])
+    watch['store'] = self.params['brand']
+    watch['sale_url'] = response.url
+    watch['currency'] = self.params['default_currency']
     save_watch(watch)
 
 

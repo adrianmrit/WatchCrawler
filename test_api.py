@@ -3,46 +3,54 @@ import json
 from PIL import Image
 from io import BytesIO
 import json
+import argparse
 
 config = json.load(open('config.json'))
 
-watch = {
-    "url": "https://www.momentumwatch.com/collections/mens-watches/products/torpedo-pro-44mm",
-    "brand": "Momentum",
-    "reference": "1M-DV44BS0",
-    "name": "Torpedo Pro [44mm]",
-    "description": "Nobody counts on their watch more than a diver does. When you hit the water or the water hits you, you can count on the Torpedo like no other. Engineered for reliability, at a price that won\u2019t leave you gasping for air. The Torpedo Family includes the Torpedo Black-ion, Torpedo Blast, Torpedo Ion-Blast, Torpedo Pro 44mm & Torpedo Pro 29mm",
-    "origin": None,
-    "collection": None,
-    "water_resistance": "200m / 660ft",
-    "case_shape": None,
-    "case_diameter": "44mm",
-    "case_width": None,
-    "case_length": None,
-    "case_thickness": "12mm",
-    "case_back": None,
-    "crystal": "Sapphire / Mineral",
-    "case_material": None,
-    "weight": None,
-    "lugs_width": "22mm",
-    "movement_type": None,
-    "caliber_diameter": None,
-    "movement_model": "Japanese, Seiko VX32G",
-    "jewels": None,
-    "time": None,
-    "caliber": None,
-    "battery": "371",
-    "functions": None,
-    "dial_color": None,
-    "indexes": None,
-    "strap_material": None,
-    "buckle": None,
-    "strap_color": None,
-    "features": None
-}
+# watch = {
+#     "brand": "Wenger",
+#     "price": "$1,307.98",
+#     "url": None,
+#     "gender": "Mens",
+#     "reference": "L3.781.4.76.9",
+#     "image": "https://www.worldofwatches.com/media/catalog/product/cache/cd4ffe7bf38b59f96d8178d3c42277fa/m/e/mens-hydroconquest-rubber-grey-dial-l37814769.jpg",
+#     "name": "Men's Hydroconquest Rubber Grey Dial",
+#     "description": None,
+#     "origin": None,
+#     "collection": "HydroConquest",
+#     "water_resistance": "300 meters / 1000 feet",
+#     "case_shape": "Round",
+#     "bezel_material": "Ceramic",
+#     "case_diameter": "41 mm",
+#     "case_width": None,
+#     "case_length": None,
+#     "case_thickness": None,
+#     "case_back": None,
+#     "crystal": "Scratch Resistant Sapphire",
+#     "case_material": "Stainless Steel",
+#     "weight": None,
+#     "lugs_width": None,
+#     "movement_type": "Automatic",
+#     "caliber_diameter": None,
+#     "movement_model": "Longines Calibre L619/888",
+#     "jewels": None,
+#     "time": "Date, Hour, Minute, Second",
+#     "caliber": None,
+#     "battery": None,
+#     "functions": "Date, Hour, Minute, Second",
+#     "dial_color": "Grey",
+#     "indexes": None,
+#     "strap_material": None,
+#     "buckle": None,
+#     "strap_color": None,
+#     "features": "Calendar, Ceramic, Rubber, Stainless Steel",
+#     "store": "WorldOfWatches",
+#     "sale_url": "https://www.worldofwatches.com/mens-hydroconquest-rubber-grey-dial-longines-l3-781-4-76-9-lng37814769",
+#     "currency": "USD"
+# }
 image = requests.get("https://cdn.shopify.com/s/files/1/1786/0047/products/1M-SP74B7G-straight_400x.jpg?v=1580779762")
 
-def test():
+def test(watch):
     img = Image.open(BytesIO(image.content))
 
     byte_io = BytesIO()
@@ -55,4 +63,8 @@ def test():
 
 
 if __name__ == '__main__':
-    test()
+    parser = argparse.ArgumentParser(description='Test using a json file for a watch')
+    parser.add_argument('--file', metavar='path', required=True,
+                        help='the path to the json file')
+    args = parser.parse_args()
+    test(json.load(open(args.file)))
